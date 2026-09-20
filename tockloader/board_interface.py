@@ -344,6 +344,12 @@ class BoardInterface:
             "arch": "cortex-m4",
             "page_size": 8192,
             "no_attribute_table": True,
+            # Unlike the other STM32 boards here, the STM32U5 does not alias
+            # flash at address 0, so reading a flash offset as if it were an
+            # absolute address faults the debug port. Flash is aliased at
+            # 0x08000000 (non-secure) and 0x0c000000 (secure); we use the
+            # non-secure alias because that is where apps are addressed from.
+            "flash_address": 0x08000000,
             "openocd": {
                 "prefix": "source [find interface/stlink.cfg]; source [find target/stm32u5x.cfg];",
             },
@@ -578,6 +584,16 @@ class BoardInterface:
         """
         Return the address where flash starts.
         """
+        # Most boards alias flash at address 0, so an offset into flash is also
+        # a valid absolute address and we do not need to know where flash
+        # starts. Boards where that is not true declare `flash_address` in
+        # `KNOWN_BOARDS`. We look this up on each call rather than caching it in
+        # `_configure_from_known_boards()` because the board name may only
+        # become known after we have already connected to the board.
+        board = getattr(self, "board", None)
+        if board and board in self.KNOWN_BOARDS:
+            return self.KNOWN_BOARDS[board].get("flash_address", None)
+
         return None
 
     def _decode_attribute(self, raw):
