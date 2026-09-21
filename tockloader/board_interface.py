@@ -578,7 +578,7 @@ class BoardInterface:
         """
         Return the address where flash starts.
         """
-        # Most boards alias flash at address 0, so an offset into flash is also
+        # Most boards map flash at address 0, so an offset into flash is also
         # a valid absolute address and we do not need to know where flash
         # starts. Boards where that is not true declare `flash_address` in
         # `KNOWN_BOARDS`. We look this up on each call rather than caching it in
